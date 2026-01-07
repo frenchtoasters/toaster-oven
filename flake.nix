@@ -160,9 +160,18 @@
 
               programs.zsh = {
                 enable = true;
-                initContent = ''
-                  alias ll="ls -lah"
-                '';
+                shellAliases = {
+                  ll = "ls -lah";
+                  exo-dev = "nix develop -c uv run exo";
+                };
+                initExtra = ''
+                  if [ -f ~/.zshrc.before-nix ]; then
+                    source ~/.zshrc.before-nix
+                  fi
+                  '';
+                oh-my-zsh = {
+                  enable = true;
+                };
               };
 
               home.shellAliases = {
