@@ -75,36 +75,54 @@ install_nix_and_conf() {
   '"
 }
 
+
 apply_flake_remote() {
   local target="$1" flake_name="$2"
   log "$target: copying flake repo + applying configuration (#$flake_name)"
-  local remote_dir="/tmp/exo-fleet"
-  rsync_to "$FLAKE_DIR/" "$target" "$remote_dir/"
+
+  # Use a HOME-relative path that rsync can reliably expand via "~"
+  local remote_dir_rel=".cache/exo-fleet/flake"
+  local remote_dir_rsync="~/${remote_dir_rel}"
+
+  # Hard reset staging dir. Try without sudo first; if permissions are borked from old runs, fix with sudo.
+  ssh_run_tty "$target" "sh -lc '
+    set -euo pipefail
+
+    if rm -rf \"\$HOME/${remote_dir_rel}\" 2>/dev/null; then
+      mkdir -p \"\$HOME/${remote_dir_rel}\"
+    else
+      sudo -v
+      sudo rm -rf \"\$HOME/${remote_dir_rel}\"
+      mkdir -p \"\$HOME/${remote_dir_rel}\"
+      sudo chown -R \"\$USER\" \"\$HOME/.cache/exo-fleet\" || true
+    fi
+  '"
+
+  # IMPORTANT: pass a literal "~/" destination so remote shell expands it correctly
+  rsync_to "$FLAKE_DIR/" "$target" "$remote_dir_rsync/"
 
   if remote_is_darwin "$target"; then
     ssh_run_tty "$target" "sh -lc '
       set -euo pipefail
       $remote_nix_profile_snippet
-      cd $remote_dir
+      cd \"\$HOME/${remote_dir_rel}\"
 
-      # nix-darwin activation must run as root
       sudo -v
-
-      # Keep it simple: just ensure root can find nix, then run darwin switch.
-      sudo sh -lc \"cd $remote_dir && \
-        export PATH=/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:\\\$PATH; \
-        nix run github:LnL7/nix-darwin -- switch --flake .#$flake_name\"
+      sudo nix run github:LnL7/nix-darwin -- switch --flake .#$flake_name
     '"
   else
     ssh_run_tty "$target" "sh -lc '
       set -euo pipefail
       $remote_nix_profile_snippet
-      cd $remote_dir
+      cd \"\$HOME/${remote_dir_rel}\"
+
       nix --extra-experimental-features nix-command --extra-experimental-features flakes \
         run github:nix-community/home-manager -- switch --flake .#$flake_name
     '"
   fi
 }
+
+
 setup_pat_macos() {
   local target="$1" user="$2"
   log "$target: storing GH_PAT in System Keychain as exo-github-pat + kick repo sync"

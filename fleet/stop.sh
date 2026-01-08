@@ -14,20 +14,18 @@ done
 [[ -n "$HOSTS" ]] || die "--hosts is required"
 
 main() {
-  mapfile -t HOST_ENTRIES < <(read_hosts "$HOSTS")
-
-  for entry in "${HOST_ENTRIES[@]}"; do
-    read -r _ ssh_target <<<"$entry"
-    [[ -n "$ssh_target" ]] || continue
-
-    log "$ssh_target: stopping EXO"
-    scp_to "$SCRIPT_DIR/lib/exo_process.sh" "$ssh_target" "/tmp/exo_process.sh"
+  read_hosts "$HOSTS" | while read -r _ ssh_target; do
+    log "$ssh_target: restarting EXO"
 
     ssh_run_tty "$ssh_target" "sh -lc '
       set -euo pipefail
-      sudo -v
-      chmod +x /tmp/exo_process.sh
-      /tmp/exo_process.sh stop
+      export PATH=\"$HOME/.nix-profile/bin:/etc/profiles/per-user/\$USER/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:\$PATH\"
+
+      if command -v exo-process >/dev/null 2>&1; then
+        exo-process stop
+      else
+        echo \"exo-process not found on PATH; nothing to stop\" >&2
+      fi
     '"
   done
 }
