@@ -78,7 +78,8 @@ start_process() {
     exit 1
   fi
 
-  export PATH="$(_start_env_path)"
+  PATH="$(_start_env_path)" || exit
+  export PATH
 
   {
     echo "PATH=${PATH}"
