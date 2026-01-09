@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOSTS_FILE="${HOSTS_FILE:-${SCRIPT_DIR}/../hosts.txt}"
 
 # Remote location of toaster-oven on each host
-TOASTER_OVEN_DIR="${TOASTER_OVEN_DIR:-$HOME/toaster-oven}"
+TOASTER_OVEN_DIR="${TOASTER_OVEN_DIR:-\$HOME/toaster-oven}"
 # Repo URL (public)
 TOASTER_OVEN_REPO="${TOASTER_OVEN_REPO:-https://github.com/frenchtoasters/toaster-oven}"
 
