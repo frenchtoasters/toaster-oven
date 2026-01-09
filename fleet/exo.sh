@@ -61,7 +61,7 @@ run_on_host() {
   local label="$1" target="$2"; shift 2
   echo "==> ${label} (${target})"
   # Use sh -lc so ~ expands and shell init works for PATH
-  ssh -tt -o BatchMode=yes -o ConnectTimeout=5 "$target" "sh -lc $(printf '%q' "$*")"
+  ssh -tt -o BatchMode=yes -o ConnectTimeout=5 "$target" "sh -lc $(printf '%q' "$*")" </dev/null
 }
 
 repo_update_one() {
