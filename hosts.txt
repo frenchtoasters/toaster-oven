@@ -1,1 +1,2 @@
 toast toast@jeeves-studio-1.local
+toast2 toast@jeeves-studio-2.local
