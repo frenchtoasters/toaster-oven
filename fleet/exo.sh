@@ -61,7 +61,7 @@ run_on_host() {
   local label="$1" target="$2"; shift 2
   echo "==> ${label} (${target})"
   # Use sh -lc so ~ expands and shell init works for PATH
-  ssh -o BatchMode=yes -o ConnectTimeout=5 "$target" "sh -lc $(printf '%q' "$*")"
+  ssh -tt -o BatchMode=yes -o ConnectTimeout=5 "$target" "sh -lc $(printf '%q' "$*")"
 }
 
 repo_update_one() {
@@ -85,7 +85,7 @@ rebuild_one() {
     set -euo pipefail
     dir=\"$TOASTER_OVEN_DIR\"
     cd \"\$dir\"
-    darwin-rebuild switch --flake \"\$dir#$label\"
+    sudo darwin-rebuild switch --flake \"\$dir#$label\"
   "
 }
 
